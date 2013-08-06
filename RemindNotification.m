@@ -1,6 +1,5 @@
 //
 //  RemindNotification.m
-//  TLines
 //
 //  Created by Ryu Iwasaki on 2013/07/31.
 //  Copyright (c) 2013年 Ryu Iwasaki. All rights reserved.
@@ -186,7 +185,7 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
 
 - (NSInteger)badgeNumber{
     
-    NSInteger badgeNumber = -1; // 負の数でないと表示が消えない
+    NSInteger badgeNumber = -1; 
     if (_badgeHidden == YES) {
         return badgeNumber;
     }
