@@ -38,6 +38,7 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
     if (self) {
         _messages = messages;
         [self setIntervalDay:interval];
+        _badgeHidden = YES;
     }
     
     return self;
@@ -50,6 +51,7 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
     if (self) {
         _messages = messages;
         [self setIntervalSecond:interval];
+        _badgeHidden = YES;
     }
     
     return self;
