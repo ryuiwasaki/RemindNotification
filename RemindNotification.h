@@ -1,6 +1,5 @@
 //
 //  RemindNotification.h
-//  TLines
 //
 //  Created by Ryu Iwasaki on 2013/07/31.
 //  Copyright (c) 2013年 Ryu Iwasaki. All rights reserved.
