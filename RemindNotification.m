@@ -26,6 +26,8 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
     NSInteger _intervalSecond;
 }
 
+#pragma mark  - Initalize
+
 - (id)initWithMessage:(NSArray *)messages{
     
     return [self initWithMessage:messages intervalSecond:DEFAULT_SECOND];
@@ -38,6 +40,7 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
     if (self) {
         _messages = messages;
         [self setIntervalDay:interval];
+        _badgeHidden = YES;
     }
     
     return self;
@@ -50,44 +53,14 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
     if (self) {
         _messages = messages;
         [self setIntervalSecond:interval];
+        _badgeHidden = YES;
     }
     
     return self;
     
 }
 
-- (void)requestWithMessage:(NSString *)message intervalSecond:(NSInteger)intervalSecond numberOfStory:(NSInteger)numberOfStory{
-    
-    UILocalNotification *notification = [[UILocalNotification alloc]init];
-    
-    NSInteger requestInterval = intervalSecond * numberOfStory;
-    notification.fireDate = [NSDate dateWithTimeInterval:requestInterval sinceDate:[NSDate date]];
-    notification.timeZone = [NSTimeZone defaultTimeZone];
-    notification.alertBody = message;
-    notification.alertAction = NSLocalizedStringFromTable(@"RNActionButton", @"RNLocalizable", nil);
-    notification.userInfo = [self userInfo];
-    notification.applicationIconBadgeNumber = [self badgeNumber];
-    
-    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
-}
-
-- (NSDictionary *)userInfo{
-    return @{RNKey:RNValue};
-}
-
-- (void)request{
-    [self reset];
-    
-    NSString *message;
-    NSInteger numberOfStory = 0;
-    
-    for (int i = 0; i < _messages.count; i ++) {
-        message = _messages[i];
-        numberOfStory = i + 1;
-
-        [self requestWithMessage:message intervalSecond:_intervalSecond numberOfStory:numberOfStory];
-    }
-}
+#pragma mark  - Setter
 
 - (void)setIntervalDay:(NSInteger)interval{
     [self updateIntervalSecond:interval * 24 * 3600];
@@ -96,7 +69,6 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
 - (void)setIntervalSecond:(NSInteger)interval{
     [self updateIntervalSecond:interval];
 }
-
 
 - (void)updateIntervalSecond:(NSInteger)interval{
     
@@ -107,17 +79,91 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
     _intervalSecond = interval;
 }
 
+#pragma mark  - Request 
+
+- (void)request{
+    [self reset];
+    
+    NSString *message;
+    NSInteger numberOfStory = 0;
+    
+    for (int i = 0; i < _messages.count; i ++) {
+        message = _messages[i];
+        numberOfStory = i + 1;
+        
+        [self requestWithMessage:message intervalSecond:_intervalSecond numberOfStory:numberOfStory];
+    }
+}
+
+- (void)requestWithMessage:(NSString *)message
+            intervalSecond:(NSInteger)intervalSecond
+             numberOfStory:(NSInteger)numberOfStory{
+ 
+    UILocalNotification *notification = [[UILocalNotification alloc]init];
+    
+    NSInteger requestInterval = intervalSecond * numberOfStory;
+    notification.fireDate = [NSDate dateWithTimeInterval:requestInterval sinceDate:[NSDate date]];
+    notification.timeZone = [NSTimeZone defaultTimeZone];
+    notification.alertBody = message;
+    notification.alertAction = NSLocalizedStringFromTable(@"RNActionButton", @"RNLocalizable", nil);
+    notification.userInfo = [self userInfo];
+    notification.applicationIconBadgeNumber = numberOfStory;
+    
+    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+}
+
+- (NSInteger)badgeNumber{
+    
+    NSInteger badgeNumber = -1;
+    if (_badgeHidden == YES) {
+        return badgeNumber;
+    }
+    
+    badgeNumber = 1;
+    
+    return badgeNumber;
+}
+
+- (void)updateBadge{
+    if (_badgeHidden == YES) {
+        return;
+    }
+    
+}
+
+- (NSDictionary *)userInfo{
+    return @{RNKey:RNValue};
+}
+
+#pragma mark  - Reset
+
 + (void)reset{
     [[RemindNotification alloc] reset];
 }
 
+// 
+
 - (void)reset{
     
-    for( UILocalNotification *notification in [[UIApplication sharedApplication] scheduledLocalNotifications] ) {
+    if ([[UIApplication sharedApplication] scheduledLocalNotifications].count == 0) {
+
+        [UIApplication sharedApplication].applicationIconBadgeNumber = -1;
+    }
+    
+    NSArray *notifications = [[[UIApplication sharedApplication] scheduledLocalNotifications] copy];
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
+    
+    for( UILocalNotification *notification in notifications ) {
+        
+        NSComparisonResult result = [notification.fireDate compare:[NSDate date]];
+        if (result == NSOrderedDescending) {
+            [[UIApplication sharedApplication]scheduleLocalNotification:notification];
+        }
         
         if( [[notification.userInfo objectForKey:RNKey] isEqualToString:RNValue] ) {
-            [[UIApplication sharedApplication] cancelLocalNotification:notification];
             [self badgeReset];
+            [[UIApplication sharedApplication] cancelLocalNotification:notification];
+            
 
         }
         
@@ -128,7 +174,8 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
 - (void)badgeReset{
     NSInteger number = [UIApplication sharedApplication].applicationIconBadgeNumber;
     [UIApplication sharedApplication].applicationIconBadgeNumber = number - 1;
-    if (number == 0) {
+    
+    if (number <= 0) {
         [UIApplication sharedApplication].applicationIconBadgeNumber = -1;
     }
 }
@@ -183,24 +230,6 @@ static NSInteger const DEFAULT_SECOND = 3600 * 24 * 7; // 1 week
     return NO;
 }
 
-- (NSInteger)badgeNumber{
-    
-    NSInteger badgeNumber = -1; 
-    if (_badgeHidden == YES) {
-        return badgeNumber;
-    }
-    
-    badgeNumber = 1;
-    
-    return badgeNumber;
-}
 
-- (void)updateBadge{
-    if (_badgeHidden == YES) {
-        return;
-    }
-    
-    
-}
 
 @end

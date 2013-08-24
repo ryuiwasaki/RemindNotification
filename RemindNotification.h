@@ -16,11 +16,10 @@
 - (id)initWithMessage:(NSArray *)messages intervalDay:(NSInteger)interval;
 - (id)initWithMessage:(NSArray *)messages intervalSecond:(NSInteger)interval;
 
-
 - (void)setIntervalDay:(NSInteger)interval;
 - (void)setIntervalSecond:(NSInteger)interval;
 
-- (void)request;
+- (void)request; // handler
 + (void)reset;
 
 - (BOOL)isFoundNotification;
